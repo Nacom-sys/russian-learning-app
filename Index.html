@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russian Core Vocabulary App (300 Words)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        /* Menu styles */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .batch-btn {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .batch-btn:hover {
+            background: #dfe6e9;
+        }
+        .batch-btn.completed {
+            background: #d4efdf;
+            border-color: #2ecc71;
+            color: #196f3d;
+        }
+        .main-menu-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: background 0.2s;
+        }
+        .main-menu-btn:hover {
+            background-color: #2980b9;
+        }
+        .practice-btn {
+            background-color: #9b59b6;
+        }
+        .practice-btn:hover {
+            background-color: #8e44ad;
+        }
+        /* Flashcard styles */
+        .stats {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-around;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px 20px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .word-front {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        .audio-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .card-back {
+            background: #f8f9fa;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 15px;
+            margin-top: 15px;
+            display: none;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+        .card-back p {
+            margin: 6px 0;
+        }
+        .phonetic { color: #e74c3c; font-weight: bold; }
+        .translation { color: #27ae60; font-weight: bold; }
+        .info { color: #7f8c8d; font-style: italic; font-size: 0.85rem; }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: white;
+        }
+        .show-btn { background-color: #e67e22; }
+        .show-btn:hover { background-color: #d35400; }
+        .fail-btn { background-color: #e74c3c; display: none; }
+        .fail-btn:hover { background-color: #c0392b; }
+        .pass-btn { background-color: #2ecc71; display: none; }
+        .pass-btn:hover { background-color: #27ae60; }
+        .back-nav {
+            background: none;
+            border: none;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="screen-menu" class="screen active">
+        <h1>Russian 300 Core Vocabulary</h1>
+        <div class="subtitle">Select a mode or batch to study</div>
+
+        <button class="main-menu-btn practice-btn" onclick="startPracticeMode()">⚡ Practice All Finished Batches</button>
+        
+        <div style="text-align: left; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Select Batch (1 - 30):</div>
+        <div class="menu-grid" id="batch-menu-grid">
+            <!-- Dynamically populated batches -->
+        </div>
+    </div>
+
+    <!-- SCREEN 2: STUDY / PRACTICE SESSION -->
+    <div id="screen-study" class="screen">
+        <button class="back-nav" onclick="returnToMenu()">⬅ Back to Main Menu</button>
+        <h1 id="study-title">Batch Study</h1>
+        
+        <div class="stats">
+            <span id="stat-queue">Queue: 0</span>
+            <span id="stat-state">State: 1</span>
+            <span id="stat-progress">Batch Progress: 0/10</span>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="word-front" id="word-display">...</div>
+                <button class="audio-btn" onclick="speakCurrentWord()">🔊 Pronounce</button>
+                
+                <div class="card-back" id="card-back">
+                    <p><strong>Spoken:</strong> <span class="phonetic" id="phonetic-display"></span></p>
+                    <p><strong>Meaning:</strong> <span class="translation" id="translation-display"></span></p>
+                    <p><strong>Grammar:</strong> <span class="info" id="info-display"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button id="btn-show" class="action-btn show-btn" onclick="showAnswer()">Show Answer</button>
+            <button id="btn-fail" class="action-btn fail-btn" onclick="handleResponse(false)">❌ Didn't Know</button>
+            <button id="btn-pass" class="action-btn pass-btn" onclick="handleResponse(true)">✔️ Knew It</button>
+        </div>
+    </div>
+
+    <script>
+        // Full database mapping all 300 core Russian words across 30 distinct batches
+        const allWordsData = [
+            /* Batch 1 */
+            [
+                { id: 1, cyrillic: "человек", phonetic: "chi-la-vyék", translation: "person / human", info: "[m] Masculine noun" },
+                { id: 2, cyrillic: "друг", phonetic: "drúk", translation: "friend", info: "[m] Masculine noun" },
+                { id: 3, cyrillic: "время", phonetic: "vré-mya", translation: "time", info: "[n] Neuter exception" },
+                { id: 4, cyrillic: "дело", phonetic: "dé-la", translation: "matter / business / thing", info: "[n] Neuter noun" },
+                { id: 5, cyrillic: "дом", phonetic: "dóm", translation: "house / home", info: "[m] Masculine noun" },
+                { id: 6, cyrillic: "делать", phonetic: "dé-la-t'", translation: "to do / to make", info: "[verb] Imperfective" },
+                { id: 7, cyrillic: "знать", phonetic: "znát'", translation: "to know", info: "[verb] Imperfective" },
+                { id: 8, cyrillic: "хотеть", phonetic: "kha-tét'", translation: "to want", info: "[verb] Imperfective" },
+                { id: 9, cyrillic: "что", phonetic: "shto", translation: "what / that", info: "[pronoun / conjunction]" },
+                { id: 10, cyrillic: "где", phonetic: "gdé", translation: "where", info: "[adverb / question word]" }
+            ],
+            /* Batch 2 */
+            [
+                { id: 11, cyrillic: "жизнь", phonetic: "zhizn'", translation: "life", info: "[f] Feminine noun" },
+                { id: 12, cyrillic: "женщина", phonetic: "zhén-shchi-na", translation: "woman", info: "[f] Feminine noun" },
+                { id: 13, cyrillic: "день", phonetic: "dyen'", translation: "day", info: "[m] Masculine noun" },
+                { id: 14, cyrillic: "год", phonetic: "gót", translation: "year", info: "[m] Masculine noun" },
+                { id: 15, cyrillic: "ребёнок", phonetic: "ri-byó-nak", translation: "child", info: "[m] Masculine noun" },
+                { id: 16, cyrillic: "говорить", phonetic: "ga-va-rít'", translation: "to speak / to talk", info: "[verb] Imperfective" },
+                { id: 17, cyrillic: "быть", phonetic: "být'", translation: "to be", info: "[verb] Imperfective" },
+                { id: 18, cyrillic: "мочь", phonetic: "moch'", translation: "to be able / can", info: "[verb] Imperfective" },
+                { id: 19, cyrillic: "сказать", phonetic: "ska-zát'", translation: "to say / to tell", info: "[verb] Perfective" },
+                { id: 20, cyrillic: "видеть", phonetic: "ví-dit'", translation: "to see", info: "[verb] Imperfective" }
+            ],
+            /* Batch 3 */
+            [
+                { id: 21, cyrillic: "рука", phonetic: "roo-ká", translation: "hand / arm", info: "[f] Feminine noun" },
+                { id: 22, cyrillic: "работа", phonetic: "ra-bó-ta", translation: "work / job", info: "[f] Feminine noun" },
+                { id: 23, cyrillic: "слово", phonetic: "sló-vo", translation: "word", info: "[n] Neuter noun" },
+                { id: 24, cyrillic: "лицо", phonetic: "li-tsó", translation: "face", info: "[n] Neuter noun" },
+                { id: 25, cyrillic: "глаз", phonetic: "glás", translation: "eye", info: "[m] Masculine noun" },
+                { id: 26, cyrillic: "город", phonetic: "gó-rat", translation: "city / town", info: "[m] Masculine noun" },
+                { id: 27, cyrillic: "место", phonetic: "més-ta", translation: "place", info: "[n] Neuter noun" },
+                { id: 28, cyrillic: "ночь", phonetic: "noch'", translation: "night", info: "[f] Feminine noun" },
+                { id: 29, cyrillic: "земля", phonetic: "zim-lyá", translation: "earth / land", info: "[f] Feminine noun" },
+                { id: 30, cyrillic: "вода", phonetic: "va-dá", translation: "water", info: "[f] Feminine noun" }
+            ],
+            /* Batch 4 */
+            [
+                { id: 31, cyrillic: "мир", phonetic: "mír", translation: "world / peace", info: "[m] Masculine noun" },
+                { id: 32, cyrillic: "мать", phonetic: "mat'", translation: "mother", info: "[f] Feminine noun" },
+                { id: 33, cyrillic: "отец", phonetic: "a-tyéts", translation: "father", info: "[m] Masculine noun" },
+                { id: 34, cyrillic: "брат", phonetic: "brat", translation: "brother", info: "[m] Masculine noun" },
+                { id: 35, cyrillic: "сестра", phonetic: "sis-trá", translation: "sister", info: "[f] Feminine noun" },
+                { id: 36, cyrillic: "любить", phonetic: "lyu-bít'", translation: "to love", info: "[verb] Imperfective" },
+                { id: 37, cyrillic: "понимать", phonetic: "pa-ni-mát'", translation: "to understand", info: "[verb] Imperfective" },
+                { id: 38, cyrillic: "думать", phonetic: "dú-mat'", translation: "to think", info: "[verb] Imperfective" },
+                { id: 39, cyrillic: "спрашивать", phonetic: "sprá-shi-vat'", translation: "to ask", info: "[verb] Imperfective" },
+                { id: 40, cyrillic: "отвечать", phonetic: "at-vi-chát'", translation: "to answer", info: "[verb] Imperfective" }
+            ],
+            /* Batch 5 */
+            [
+                { id: 41, cyrillic: "книга", phonetic: "kní-ga", translation: "book", info: "[f] Feminine noun" },
+                { id: 42, cyrillic: "письмо", phonetic: "pis'-mó", translation: "letter", info: "[n] Neuter noun" },
+                { id: 43, cyrillic: "школа", phonetic: "shkó-la", translation: "school", info: "[f] Feminine noun" },
+                { id: 44, cyrillic: "университет", phonetic: "u-ni-vir-si-tyét", translation: "university", info: "[m] Masculine noun" },
+                { id: 45, cyrillic: "учитель", phonetic: "u-chí-til'", translation: "teacher", info: "[m] Masculine noun" },
+                { id: 46, cyrillic: "учиться", phonetic: "u-chí-tsa", translation: "to study / learn", info: "[verb] Reflexive" },
+                { id: 47, cyrillic: "читать", phonetic: "chi-tát'", translation: "to read", info: "[verb] Imperfective" },
+                { id: 48, cyrillic: "писать", phonetic: "pi-sát'", translation: "to write", info: "[verb] Imperfective" },
+                { id: 49, cyrillic: "учить", phonetic: "u-chít'", translation: "to teach / memorize", info: "[verb] Imperfective" },
+                { id: 50, cyrillic: "урок", phonetic: "u-rók", translation: "lesson", info: "[m] Masculine noun" }
+            ],
+            /* Batch 6 */
+            [
+                { id: 51, cyrillic: "сторона", phonetic: "sta-ra-ná", translation: "side / direction", info: "[f] Feminine noun" },
+                { id: 52, cyrillic: "сила", phonetic: "sí-la", translation: "strength / power", info: "[f] Feminine noun" },
+                { id: 53, cyrillic: "путь", phonetic: "put'", translation: "path / way", info: "[m] Masculine exception" },
+                { id: 54, cyrillic: "конец", phonetic: "ka-nyéts", translation: "end", info: "[m] Masculine noun" },
+                { id: 55, cyrillic: "начало", phonetic: "na-chá-la", translation: "beginning", info: "[n] Neuter noun" },
+                { id: 56, cyrillic: "идти", phonetic: "id-tí", translation: "to go (on foot)", info: "[verb] Imperfective" },
+                { id: 57, cyrillic: "ехать", phonetic: "yé-khat'", translation: "to go (by vehicle)", info: "[verb] Imperfective" },
+                { id: 58, cyrillic: "ходить", phonetic: "kha-dít'", translation: "to walk / go regularly", info: "[verb] Imperfective" },
+                { id: 59, cyrillic: "приходить", phonetic: "pri-kha-dít'", translation: "to arrive / come", info: "[verb] Imperfective" },
+                { id: 60, cyrillic: "уходить", phonetic: "u-kha-dít'", translation: "to leave", info: "[verb] Imperfective" }
+            ],
+            /* Batch 7 */
+            [
+                { id: 61, cyrillic: "утро", phonetic: "ú-tra", translation: "morning", info: "[n] Neuter noun" },
+                { id: 62, cyrillic: "вечер", phonetic: "vyé-chir", translation: "evening", info: "[m] Masculine noun" },
+                { id: 63, cyrillic: "сегодня", phonetic: "si-vód-nya", translation: "today", info: "[adverb]" },
+                { id: 64, cyrillic: "вчера", phonetic: "fchi-rá", translation: "yesterday", info: "[adverb]" },
+                { id: 65, cyrillic: "завтра", phonetic: "záf-tra", translation: "tomorrow", info: "[adverb]" },
+                { id: 66, cyrillic: "неделя", phonetic: "ni-dyé-lya", translation: "week", info: "[f] Feminine noun" },
+                { id: 67, cyrillic: "месяц", phonetic: "myé-syats", translation: "month", info: "[m] Masculine noun" },
+                { id: 68, cyrillic: "час", phonetic: "chas", translation: "hour", info: "[m] Masculine noun" },
+                { id: 69, cyrillic: "минута", phonetic: "mi-nú-ta", translation: "minute", info: "[f] Feminine noun" },
+                { id: 70, cyrillic: "секунда", phonetic: "si-kún-da", translation: "second", info: "[f] Feminine noun" }
+            ],
+            /* Batch 8 */
+            [
+                { id: 71, cyrillic: "большой", phonetic: "bal-shóy", translation: "big / large", info: "[adjective]" },
+                { id: 72, cyrillic: "маленький", phonetic: "má-lin'-kiy", translation: "small / little", info: "[adjective]" },
+                { id: 73, cyrillic: "новый", phonetic: "nó-viy", translation: "new", info: "[adjective]" },
+                { id: 74, cyrillic: "старый", phonetic: "stá-riy", translation: "old", info: "[adjective]" },
+                { id: 75, cyrillic: "хороший", phonetic: "kha-ró-shiy", translation: "good", info: "[adjective]" },
+                { id: 76, cyrillic: "плохой", phonetic: "pla-hóy", translation: "bad", info: "[adjective]" },
+                { id: 77, cyrillic: "высокий", phonetic: "vy-só-kiy", translation: "tall / high", info: "[adjective]" },
+                { id: 78, cyrillic: "низкий", phonetic: "níz-kiy", translation: "low", info: "[adjective]" },
+                { id: 79, cyrillic: "длинный", phonetic: "dlín-nyy", translation: "long", info: "[adjective]" },
+                { id: 80, cyrillic: "короткий", phonetic: "ka-rót-kiy", translation: "short", info: "[adjective]" }
+            ],
+            /* Batch 9 */
+            [
+                { id: 81, cyrillic: "красивый", phonetic: "kra-sí-viy", translation: "beautiful", info: "[adjective]" },
+                { id: 82, cyrillic: "умный", phonetic: "úm-nyy", translation: "smart / intelligent", info: "[adjective]" },
+                { id: 83, cyrillic: "добрый", phonetic: "dó-briy", translation: "kind", info: "[adjective]" },
+                { id: 84, cyrillic: "злой", phonetic: "zlóy", translation: "evil / angry", info: "[adjective]" },
+                { id: 85, cyrillic: "бедный", phonetic: "byéd-nyy", translation: "poor", info: "[adjective]" },
+                { id: 86, cyrillic: "богатый", phonetic: "ba-gá-tyy", translation: "rich", info: "[adjective]" },
+                { id: 87, cyrillic: "молодой", phonetic: "ma-la-dóy", translation: "young", info: "[adjective]" },
+                { id: 88, cyrillic: "быстрый", phonetic: "býs-triy", translation: "fast / quick", info: "[adjective]" },
+                { id: 89, cyrillic: "медленный", phonetic: "myéd-lin-nyy", translation: "slow", info: "[adjective]" },
+                { id: 90, cyrillic: "чистый", phonetic: "chís-tyy", translation: "clean", info: "[adjective]" }
+            ],
+            /* Batch 10 */
+            [
+                { id: 91, cyrillic: "стол", phonetic: "stól", translation: "table / desk", info: "[m] Masculine noun" },
+                { id: 92, cyrillic: "стул", phonetic: "stul", translation: "chair", info: "[m] Masculine noun" },
+                { id: 93, cyrillic: "окно", phonetic: "ak-nó", translation: "window", info: "[n] Neuter noun" },
+                { id: 94, cyrillic: "дверь", phonetic: "dvyer'", translation: "door", info: "[f] Feminine noun" },
+                { id: 95, cyrillic: "комната", phonetic: "kóm-na-ta", translation: "room", info: "[f] Feminine noun" },
+                { id: 96, cyrillic: "стена", phonetic: "sti-ná", translation: "wall", info: "[f] Feminine noun" },
+                { id: 97, cyrillic: "пол", phonetic: "pól", translation: "floor", info: "[m] Masculine noun" },
+                { id: 98, cyrillic: "потолок", phonetic: "pa-ta-lók", translation: "ceiling", info: "[m] Masculine noun" },
+                { id: 99, cyrillic: "крыша", phonetic: "krý-sha", translation: "roof", info: "[f] Feminine noun" },
+                { id: 100, cyrillic: "кухня", phonetic: "kúkh-nya", translation: "kitchen", info: "[f] Feminine noun" }
+            ],
+            /* Batches 11 through 30 (fully structured core lists) */
+            [
+                { id: 101, cyrillic: "еда", phonetic: "yi-dá", translation: "food", info: "[f] Feminine noun" },
+                { id: 102, cyrillic: "хлеб", phonetic: "khlyep", translation: "bread", info: "[m] Masculine noun" },
+                { id: 103, cyrillic: "молоко", phonetic: "ma-la-kó", translation: "milk", info: "[n] Neuter noun" },
+                { id: 104, cyrillic: "мясо", phonetic: "myá-sa", translation: "meat", info: "[n] Neuter noun" },
+                { id: 105, cyrillic: "рыба", phonetic: "rý-ba", translation: "fish", info: "[f] Feminine noun" },
+                { id: 106, cyrillic: "чай", phonetic: "chay", translation: "tea", info: "[m] Masculine noun" },
+                { id: 107, cyrillic: "кофе", phonetic: "kó-fi", translation: "coffee", info: "[m] Masculine exception" },
+                { id: 108, cyrillic: "сахар", phonetic: "sá-khar", translation: "sugar", info: "[m] Masculine noun" },
+                { id: 109, cyrillic: "соль", phonetic: "sol'", translation: "salt", info: "[f] Feminine noun" },
+                { id: 110, cyrillic: "суп", phonetic: "sup", translation: "soup", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 111, cyrillic: "есть", phonetic: "yest'", translation: "to eat", info: "[verb] Imperfective" },
+                { id: 112, cyrillic: "пить", phonetic: "pit'", translation: "to drink", info: "[verb] Imperfective" },
+                { id: 113, cyrillic: "готовить", phonetic: "ga-tó-vit'", translation: "to cook / prepare", info: "[verb] Imperfective" },
+                { id: 114, cyrillic: "покупать", phonetic: "pa-ku-pát'", translation: "to buy", info: "[verb] Imperfective" },
+                { id: 115, cyrillic: "продавать", phonetic: "pra-da-vát'", translation: "to sell", info: "[verb] Imperfective" },
+                { id: 116, cyrillic: "платить", phonetic: "pla-tít'", translation: "to pay", info: "[verb] Imperfective" },
+                { id: 117, cyrillic: "брать", phonetic: "brat'", translation: "to take", info: "[verb] Imperfective" },
+                { id: 118, cyrillic: "давать", phonetic: "da-vát'", translation: "to give", info: "[verb] Imperfective" },
+                { id: 119, cyrillic: "получать", phonetic: "pa-lu-chát'", translation: "to receive / get", info: "[verb] Imperfective" },
+                { id: 120, cyrillic: "терять", phonetic: "ti-ryát'", translation: "to lose", info: "[verb] Imperfective" }
+            ],
+            [
+                { id: 121, cyrillic: "деньги", phonetic: "dyén'-gi", translation: "money", info: "[pl] Plural noun" },
+                { id: 122, cyrillic: "цена", phonetic: "tsi-ná", translation: "price", info: "[f] Feminine noun" },
+                { id: 123, cyrillic: "магазин", phonetic: "ma-ga-zín", translation: "store / shop", info: "[m] Masculine noun" },
+                { id: 124, cyrillic: "рынок", phonetic: "rý-nak", translation: "market", info: "[m] Masculine noun" },
+                { id: 125, cyrillic: "банк", phonetic: "bank", translation: "bank", info: "[m] Masculine noun" },
+                { id: 126, cyrillic: "карта", phonetic: "kár-ta", translation: "card / map", info: "[f] Feminine noun" },
+                { id: 127, cyrillic: "монета", phonetic: "ma-nyé-ta", translation: "coin", info: "[f] Feminine noun" },
+                { id: 128, cyrillic: "вещь", phonetic: "vyeshch'", translation: "thing / object", info: "[f] Feminine noun" },
+                { id: 129, cyrillic: "подарок", phonetic: "pa-dá-rak", translation: "gift / present", info: "[m] Masculine noun" },
+                { id: 130, cyrillic: "покупка", phonetic: "pa-kúp-ka", translation: "purchase", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 131, cyrillic: "машина", phonetic: "ma-shí-na", translation: "car / machine", info: "[f] Feminine noun" },
+                { id: 132, cyrillic: "поезд", phonetic: "pó-izt", translation: "train", info: "[m] Masculine noun" },
+                { id: 133, cyrillic: "самолет", phonetic: "sa-ma-lyót", translation: "airplane", info: "[m] Masculine noun" },
+                { id: 134, cyrillic: "корабль", phonetic: "ka-rábl'", translation: "ship", info: "[m] Masculine noun" },
+                { id: 135, cyrillic: "автобус", phonetic: "af-tó-bus", translation: "bus", info: "[m] Masculine noun" },
+                { id: 136, cyrillic: "велосипед", phonetic: "vi-li-si-pyét", translation: "bicycle", info: "[m] Masculine noun" },
+                { id: 137, cyrillic: "дорога", phonetic: "da-ró-ga", translation: "road / way", info: "[f] Feminine noun" },
+                { id: 138, cyrillic: "улица", phonetic: "ú-li-tsa", translation: "street", info: "[f] Feminine noun" },
+                { id: 139, cyrillic: "мост", phonetic: "móst", translation: "bridge", info: "[m] Masculine noun" },
+                { id: 140, cyrillic: "станция", phonetic: "stán-tsi-ya", translation: "station", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 141, cyrillic: "страна", phonetic: "stra-ná", translation: "country", info: "[f] Feminine noun" },
+                { id: 142, cyrillic: "государство", phonetic: "ga-su-dár-stva", translation: "state / government", info: "[n] Neuter noun" },
+                { id: 143, cyrillic: "президент", phonetic: "pri-zi-dyént", translation: "president", info: "[m] Masculine noun" },
+                { id: 144, cyrillic: "армия", phonetic: "ár-mi-ya", translation: "army", info: "[f] Feminine noun" },
+                { id: 145, cyrillic: "война", phonetic: "vay-ná", translation: "war", info: "[f] Feminine noun" },
+                { id: 146, cyrillic: "закон", phonetic: "za-kón", translation: "law", info: "[m] Masculine noun" },
+                { id: 147, cyrillic: "власть", phonetic: "vlast'", translation: "power / authority", info: "[f] Feminine noun" },
+                { id: 148, cyrillic: "народ", phonetic: "na-rót", translation: "people / nation", info: "[m] Masculine noun" },
+                { id: 149, cyrillic: "общество", phonetic: "óp-shchi-stva", translation: "society", info: "[n] Neuter noun" },
+                { id: 150, cyrillic: "гражданин", phonetic: "gra-zha-da-nín", translation: "citizen", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 151, cyrillic: "работа", phonetic: "ra-bó-ta", translation: "labor / profession", info: "[f] Feminine noun" },
+                { id: 152, cyrillic: "начальник", phonetic: "na-chál'-nik", translation: "boss / chief", info: "[m] Masculine noun" },
+                { id: 153, cyrillic: "коллега", phonetic: "ka-lyé-ga", translation: "colleague", info: "[m/f] Noun" },
+                { id: 154, cyrillic: "офис", phonetic: "ó-fis", translation: "office", info: "[m] Masculine noun" },
+                { id: 155, cyrillic: "зарплата", phonetic: "zar-plá-ta", translation: "salary", info: "[f] Feminine noun" },
+                { id: 156, cyrillic: "отпуск", phonetic: "ót-pusk", translation: "vacation / leave", info: "[m] Masculine noun" },
+                { id: 157, cyrillic: "проект", phonetic: "pra-yékt", translation: "project", info: "[m] Masculine noun" },
+                { id: 158, cyrillic: "успех", phonetic: "us-pyékh", translation: "success", info: "[m] Masculine noun" },
+                { id: 159, cyrillic: "ошибка", phonetic: "a-shýp-ka", translation: "mistake / error", info: "[f] Feminine noun" },
+                { id: 160, cyrillic: "цель", phonetic: "tsel'", translation: "goal / target", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 161, cyrillic: "тело", phonetic: "tyé-la", translation: "body", info: "[n] Neuter noun" },
+                { id: 162, cyrillic: "голова", phonetic: "ga-la-vá", translation: "head", info: "[f] Feminine noun" },
+                { id: 163, cyrillic: "волос", phonetic: "vó-las", translation: "hair", info: "[m] Masculine noun" },
+                { id: 164, cyrillic: "нос", phonetic: "nós", translation: "nose", info: "[m] Masculine noun" },
+                { id: 165, cyrillic: "рот", phonetic: "rót", translation: "mouth", info: "[m] Masculine noun" },
+                { id: 166, cyrillic: "ухо", phonetic: "ú-kha", translation: "ear", info: "[n] Neuter noun" },
+                { id: 167, cyrillic: "сердце", phonetic: "syér-tse", translation: "heart", info: "[n] Neuter noun" },
+                { id: 168, cyrillic: "кровь", phonetic: "krof'", translation: "blood", info: "[f] Feminine noun" },
+                { id: 169, cyrillic: "нога", phonetic: "na-gá", translation: "leg / foot", info: "[f] Feminine noun" },
+                { id: 170, cyrillic: "палец", phonetic: "pá-lyets", translation: "finger / toe", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 171, cyrillic: "здоровье", phonetic: "zda-ró-v'ye", translation: "health", info: "[n] Neuter noun" },
+                { id: 172, cyrillic: "болезнь", phonetic: "ba-lyézn'", translation: "illness / disease", info: "[f] Feminine noun" },
+                { id: 173, cyrillic: "врач", phonetic: "vrach", translation: "doctor", info: "[m] Masculine noun" },
+                { id: 174, cyrillic: "больница", phonetic: "bal-ní-tsa", translation: "hospital", info: "[f] Feminine noun" },
+                { id: 175, cyrillic: "лекарство", phonetic: "li-kár-stva", translation: "medicine", info: "[n] Neuter noun" },
+                { id: 176, cyrillic: "боль", phonetic: "bol'", translation: "pain", info: "[f] Feminine noun" },
+                { id: 177, cyrillic: "сон", phonetic: "són", translation: "sleep / dream", info: "[m] Masculine noun" },
+                { id: 178, cyrillic: "отдых", phonetic: "ót-dykh", translation: "rest / relaxation", info: "[m] Masculine noun" },
+                { id: 179, cyrillic: "спорт", phonetic: "spórt", translation: "sport", info: "[m] Masculine noun" },
+                { id: 180, cyrillic: "сила", phonetic: "sí-la", translation: "energy / vigor", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 181, cyrillic: "природа", phonetic: "pri-ró-da", translation: "nature", info: "[f] Feminine noun" },
+                { id: 182, cyrillic: "погода", phonetic: "pa-gó-da", translation: "weather", info: "[f] Feminine noun" },
+                { id: 183, cyrillic: "солнце", phonetic: "són-tse", translation: "sun", info: "[n] Neuter noun" },
+                { id: 184, cyrillic: "дождь", phonetic: "dosht'", translation: "rain", info: "[m] Masculine noun" },
+                { id: 185, cyrillic: "снег", phonetic: "snyek", translation: "snow", info: "[m] Masculine noun" },
+                { id: 186, cyrillic: "ветер", phonetic: "vyé-tir", translation: "wind", info: "[m] Masculine noun" },
+                { id: 187, cyrillic: "небо", phonetic: "nyé-ba", translation: "sky", info: "[n] Neuter noun" },
+                { id: 188, cyrillic: "лес", phonetic: "lyes", translation: "forest / woods", info: "[m] Masculine noun" },
+                { id: 189, cyrillic: "река", phonetic: "ri-ká", translation: "river", info: "[f] Feminine noun" },
+                { id: 190, cyrillic: "море", phonetic: "mó-ri", translation: "sea", info: "[n] Neuter noun" }
+            ],
+            [
+                { id: 191, cyrillic: "животное", phonetic: "zhi-vót-na-ye", translation: "animal", info: "[n] Neuter noun" },
+                { id: 192, cyrillic: "собака", phonetic: "sa-bá-ka", translation: "dog", info: "[f] Feminine noun" },
+                { id: 193, cyrillic: "кошка", phonetic: "kósh-ka", translation: "cat", info: "[f] Feminine noun" },
+                { id: 194, cyrillic: "птица", phonetic: "ptí-tsa", translation: "bird", info: "[f] Feminine noun" },
+                { id: 195, cyrillic: "рыба", phonetic: "rý-ba", translation: "fish (marine)", info: "[f] Feminine noun" },
+                { id: 196, cyrillic: "лошадь", phonetic: "ló-shat'", translation: "horse", info: "[f] Feminine noun" },
+                { id: 197, cyrillic: "корова", phonetic: "ka-ró-va", translation: "cow", info: "[f] Feminine noun" },
+                { id: 198, cyrillic: "птичка", phonetic: "ptí-chka", translation: "little bird", info: "[f] Feminine noun" },
+                { id: 199, cyrillic: "зверь", phonetic: "zvyer'", translation: "wild beast", info: "[m] Masculine noun" },
+                { id: 200, cyrillic: "цветок", phonetic: "tsi-vlók", translation: "flower", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 201, cyrillic: "музыка", phonetic: "mú-zy-ka", translation: "music", info: "[f] Feminine noun" },
+                { id: 202, cyrillic: "песня", phonetic: "pyés-nya", translation: "song", info: "[f] Feminine noun" },
+                { id: 203, cyrillic: "фильм", phonetic: "fíl'm", translation: "film / movie", info: "[m] Masculine noun" },
+                { id: 204, cyrillic: "театр", phonetic: "ti-átr", translation: "theater", info: "[m] Masculine noun" },
+                { id: 205, cyrillic: "искусство", phonetic: "is-kús-stva", translation: "art", info: "[n] Neuter noun" },
+                { id: 206, cyrillic: "картина", phonetic: "kar-tí-na", translation: "painting / picture", info: "[f] Feminine noun" },
+                { id: 207, cyrillic: "игра", phonetic: "i-grá", translation: "game / play", info: "[f] Feminine noun" },
+                { id: 208, cyrillic: "танец", phonetic: "tá-nyets", translation: "dance", info: "[m] Masculine noun" },
+                { id: 209, cyrillic: "клуб", phonetic: "klup", translation: "club", info: "[m] Masculine noun" },
+                { id: 210, cyrillic: "праздник", phonetic: "prázd-nik", translation: "holiday / celebration", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 211, cyrillic: "наука", phonetic: "na-ú-ka", translation: "science", info: "[f] Feminine noun" },
+                { id: 212, cyrillic: "история", phonetic: "is-tó-ri-ya", translation: "history / story", info: "[f] Feminine noun" },
+                { id: 213, cyrillic: "язык", phonetic: "ya-zýk", translation: "language / tongue", info: "[m] Masculine noun" },
+                { id: 214, cyrillic: "слово", phonetic: "sló-va", translation: "term / word", info: "[n] Neuter noun" },
+                { id: 215, cyrillic: "буква", phonetic: "búk-va", translation: "letter (alphabet)", info: "[f] Feminine noun" },
+                { id: 216, cyrillic: "цифра", phonetic: "tsý-fra", translation: "digit / figure", info: "[f] Feminine noun" },
+                { id: 217, cyrillic: "номер", phonetic: "nó-mir", translation: "number", info: "[m] Masculine noun" },
+                { id: 218, cyrillic: "задача", phonetic: "za-dá-cha", translation: "problem / task", info: "[f] Feminine noun" },
+                { id: 219, cyrillic: "ответ", phonetic: "at-vyét", translation: "response / answer", info: "[m] Masculine noun" },
+                { id: 220, cyrillic: "вопрос", phonetic: "va-prós", translation: "question", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 221, cyrillic: "компьютер", phonetic: "kam-pyú-tir", translation: "computer", info: "[m] Masculine noun" },
+                { id: 222, cyrillic: "телефон", phonetic: "ti-li-fón", translation: "telephone / phone", info: "[m] Masculine noun" },
+                { id: 223, cyrillic: "интернет", phonetic: "in-tir-nyét", translation: "internet", info: "[m] Masculine noun" },
+                { id: 224, cyrillic: "сайт", phonetic: "syt", translation: "website", info: "[m] Masculine noun" },
+                { id: 225, cyrillic: "письмо", phonetic: "pis'-mó", translation: "email / message", info: "[n] Neuter noun" },
+                { id: 226, cyrillic: "экран", phonetic: "ek-rán", translation: "screen", info: "[m] Masculine noun" },
+                { id: 227, cyrillic: "сеть", phonetic: "syet'", translation: "network / web", info: "[f] Feminine noun" },
+                { id: 228, cyrillic: "программа", phonetic: "pra-grám-ma", translation: "program / software", info: "[f] Feminine noun" },
+                { id: 229, cyrillic: "файл", phonetic: "fyl", translation: "file", info: "[m] Masculine noun" },
+                { id: 230, cyrillic: "связь", phonetic: "svyaz'", translation: "connection / communication", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 231, cyrillic: "дом", phonetic: "dóm", translation: "household / home", info: "[m] Masculine noun" },
+                { id: 232, cyrillic: "семья", phonetic: "sim-yá", translation: "family", info: "[f] Feminine noun" },
+                { id: 233, cyrillic: "родители", phonetic: "ra-dí-ti-li", translation: "parents", info: "[pl] Plural noun" },
+                { id: 234, cyrillic: "муж", phonetic: "músh", translation: "husband", info: "[m] Masculine noun" },
+                { id: 235, cyrillic: "жена", phonetic: "zhi-ná", translation: "wife", info: "[f] Feminine noun" },
+                { id: 236, cyrillic: "сын", phonetic: "sýn", translation: "son", info: "[m] Masculine noun" },
+                { id: 237, cyrillic: "дочь", phonetic: "doch'", translation: "daughter", info: "[f] Feminine noun" },
+                { id: 238, cyrillic: "дедушка", phonetic: "dyé-dush-ka", translation: "grandfather", info: "[m] Masculine noun" },
+                { id: 239, cyrillic: "бабушка", phonetic: "bá-bush-ka", translation: "grandmother", info: "[f] Feminine noun" },
+                { id: 240, cyrillic: "родственник", phonetic: "rót-stvin-nik", translation: "relative", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 241, cyrillic: "путешествие", phonetic: "pu-ti-shé-stvi-ye", translation: "travel / journey", info: "[n] Neuter noun" },
+                { id: 242, cyrillic: "отель", phonetic: "a-tyél'", translation: "hotel", info: "[m] Masculine noun" },
+                { id: 243, cyrillic: "карта", phonetic: "kár-ta", translation: "map", info: "[f] Feminine noun" },
+                { id: 244, cyrillic: "паспорт", phonetic: "pás-part", translation: "passport", info: "[m] Masculine noun" },
+                { id: 245, cyrillic: "билет", phonetic: "bi-lyét", translation: "ticket", info: "[m] Masculine noun" },
+                { id: 246, cyrillic: "сумка", phonetic: "súm-ka", translation: "bag / luggage", info: "[f] Feminine noun" },
+                { id: 247, cyrillic: "город", phonetic: "gó-rat", translation: "city center", info: "[m] Masculine noun" },
+                { id: 248, cyrillic: "экскурсия", phonetic: "eks-kúr-si-ya", translation: "tour / excursion", info: "[f] Feminine noun" },
+                { id: 249, cyrillic: "море", phonetic: "mó-ri", translation: "seaside resort", info: "[n] Neuter noun" },
+                { id: 250, cyrillic: "пляж", phonetic: "plyázh", translation: "beach", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 251, cyrillic: "одежда", phonetic: "a-dyézh-da", translation: "clothing / clothes", info: "[f] Feminine noun" },
+                { id: 252, cyrillic: "рубашка", phonetic: "ru-básh-ka", translation: "shirt", info: "[f] Feminine noun" },
+                { id: 253, cyrillic: "брюки", phonetic: "brú-ki", translation: "trousers / pants", info: "[pl] Plural noun" },
+                { id: 254, cyrillic: "платье", phonetic: "plá-t'ye", translation: "dress", info: "[n] Neuter noun" },
+                { id: 255, cyrillic: "обувь", phonetic: "ó-buf'", translation: "footwear / shoes", info: "[f] Feminine noun" },
+                { id: 256, cyrillic: "шапка", phonetic: "sháp-ka", translation: "hat / cap", info: "[f] Feminine noun" },
+                { id: 257, cyrillic: "пальто", phonetic: "pal'-tó", translation: "coat", info: "[n] Neuter exception" },
+                { id: 258, cyrillic: "костюм", phonetic: "ka-styúm", translation: "suit", info: "[m] Masculine noun" },
+                { id: 259, cyrillic: "карман", phonetic: "kar-mán", translation: "pocket", info: "[m] Masculine noun" },
+                { id: 260, cyrillic: "пуговица", phonetic: "pú-ga-vi-tsa", translation: "button", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 261, cyrillic: "цвета", phonetic: "tsi-vá", translation: "colors", info: "[pl] Plural noun" },
+                { id: 262, cyrillic: "красный", phonetic: "krás-nyy", translation: "red", info: "[adjective]" },
+                { id: 263, cyrillic: "синий", phonetic: "sí-niy", translation: "dark blue", info: "[adjective]" },
+                { id: 264, cyrillic: "зеленый", phonetic: "zi-lyé-nyy", translation: "green", info: "[adjective]" },
+                { id: 265, cyrillic: "желтый", phonetic: "zhól-tyy", translation: "yellow", info: "[adjective]" },
+                { id: 266, cyrillic: "белый", phonetic: "byé-liy", translation: "white", info: "[adjective]" },
+                { id: 267, cyrillic: "черный", phonetic: "chór-nyy", translation: "black", info: "[adjective]" },
+                { id: 268, cyrillic: "серый", phonetic: "sé-riy", translation: "grey", info: "[adjective]" },
+                { id: 269, cyrillic: "коричневый", phonetic: "ka-rích-ni-viy", translation: "brown", info: "[adjective]" },
+                { id: 270, cyrillic: "розовый", phonetic: "ró-za-viy", translation: "pink", info: "[adjective]" }
+            ],
+            [
+                { id: 271, cyrillic: "чувство", phonetic: "chú-stva", translation: "feeling / emotion", info: "[n] Neuter noun" },
+                { id: 272, cyrillic: "радость", phonetic: "rá-dast'", translation: "joy / happiness", info: "[f] Feminine noun" },
+                { id: 273, cyrillic: "грусть", phonetic: "grust'", translation: "sadness", info: "[f] Feminine noun" },
+                { id: 274, cyrillic: "страх", phonetic: "strakh", translation: "fear", info: "[m] Masculine noun" },
+                { id: 275, cyrillic: "гнев", phonetic: "gnyef", translation: "anger", info: "[m] Masculine noun" },
+                { id: 276, cyrillic: "удивление", phonetic: "u-div-lyé-ni-ye", translation: "surprise", info: "[n] Neuter noun" },
+                { id: 277, cyrillic: "интерес", phonetic: "in-ti-ryés", translation: "interest", info: "[m] Masculine noun" },
+                { id: 278, cyrillic: "любовь", phonetic: "lyu-bóf'", translation: "deep love", info: "[f] Feminine noun" },
+                { id: 279, cyrillic: "надежда", phonetic: "na-dyézh-da", translation: "hope", info: "[f] Feminine noun" },
+                { id: 280, cyrillic: "скука", phonetic: "skú-ka", translation: "boredom", info: "[f] Feminine noun" }
+            ],
+            [
+                { id: 281, cyrillic: "правда", phonetic: "práf-da", translation: "truth", info: "[f] Feminine noun" },
+                { id: 282, cyrillic: "ложь", phonetic: "losh'", translation: "lie / falsehood", info: "[f] Feminine noun" },
+                { id: 283, cyrillic: "секрет", phonetic: "si-kryét", translation: "secret", info: "[m] Masculine noun" },
+                { id: 284, cyrillic: "совет", phonetic: "sa-vyét", translation: "advice / counsel", info: "[m] Masculine noun" },
+                { id: 285, cyrillic: "пример", phonetic: "pri-myér", translation: "example", info: "[m] Masculine noun" },
+                { id: 286, cyrillic: "случай", phonetic: "slú-chay", translation: "incident / case / chance", info: "[m] Masculine noun" },
+                { id: 287, cyrillic: "причина", phonetic: "pri-čí-na", translation: "reason / cause", info: "[f] Feminine noun" },
+                { id: 288, cyrillic: "следствие", phonetic: "sléd-stvi-ye", translation: "consequence / effect", info: "[n] Neuter noun" },
+                { id: 289, cyrillic: "вариант", phonetic: "va-ri-ánt", translation: "option / variant", info: "[m] Masculine noun" },
+                { id: 290, cyrillic: "образ", phonetic: "ó-braz", translation: "image / way", info: "[m] Masculine noun" }
+            ],
+            [
+                { id: 291, cyrillic: "форма", phonetic: "fór-ma", translation: "form / shape", info: "[f] Feminine noun" },
+                { id: 292, cyrillic: "линия", phonetic: "lí-ni-ya", translation: "line", info: "[f] Feminine noun" },
+                { id: 293, cyrillic: "точка", phonetic: "tó-chka", translation: "dot / point", info: "[f] Feminine noun" },
+                { id: 294, cyrillic: "круг", phonetic: "krúk", translation: "circle / ring", info: "[m] Masculine noun" },
+                { id: 295, cyrillic: "угол", phonetic: "u-gól", translation: "angle / corner", info: "[m] Masculine noun" },
+                { id: 296, cyrillic: "сторона", phonetic: "sta-ra-ná", translation: "lateral side / edge", info: "[f] Feminine noun" },
+                { id: 297, cyrillic: "размер", phonetic: "raz-myér", translation: "size / dimension", info: "[m] Masculine noun" },
+                { id: 298, cyrillic: "вес", phonetic: "vyes", translation: "weight", info: "[m] Masculine noun" },
+                { id: 299, cyrillic: "объем", phonetic: "ap-yóm", translation: "volume / capacity", info: "[m] Masculine noun" },
+                { id: 300, cyrillic: "качество", phonetic: "ká-chi-stva", translation: "quality / property", info: "[n] Neuter noun" }
+            ]
+        ];
+
+        let userProgress = {};
+        let completedBatches = {};
+
+        function loadAppData() {
+            const savedProg = localStorage.getItem('ru_progress');
+            const savedComp = localStorage.getItem('ru_completed');
+            if (savedProg) userProgress = JSON.parse(savedProg);
+            if (savedComp) completedBatches = JSON.parse(savedComp);
+        }
+
+        function saveAppData() {
+            localStorage.setItem('ru_progress', JSON.stringify(userProgress));
+            localStorage.setItem('ru_completed', JSON.stringify(completedBatches));
+        }
+
+        const stateThresholds = {
+            1: 2, 2: 5, 3: 10, 4: 25, 5: 50, 
+            6: 100, 7: 250, 8: 500, 9: 750, 10: 1000
+        };
+
+        let currentActiveQueue = [];
+        let activeBatchIndex = null;
+        let isPracticeMode = false;
+
+        function initMenu() {
+            loadAppData();
+            const grid = document.getElementById("batch-menu-grid");
+            grid.innerHTML = "";
+
+            for (let i = 0; i < allWordsData.length; i++) {
+                const btn = document.createElement("button");
+                btn.className = "batch-btn";
+                let batchNum = i + 1;
+                btn.innerText = `Batch ${batchNum}`;
+                
+                if (completedBatches[i]) {
+                    btn.classList.add("completed");
+                    btn.innerText += " ✓";
+                }
+
+                btn.onclick = () => startBatchStudy(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function returnToMenu() {
+            document.getElementById("screen-study").classList.remove("active");
+            document.getElementById("screen-menu").classList.add("active");
+            initMenu();
+        }
+
+        function startBatchStudy(batchIndex) {
+            isPracticeMode = false;
+            activeBatchIndex = batchIndex;
+            document.getElementById("study-title").innerText = `Batch ${batchIndex + 1} Learning`;
+            
+            currentActiveQueue = JSON.parse(JSON.stringify(allWordsData[batchIndex]));
+            currentActiveQueue.forEach(w => {
+                if (!userProgress[w.id]) {
+                    userProgress[w.id] = { state: 1, correctInState: 0 };
+                }
+            });
+
+            document.getElementById("screen-menu").classList.remove("active");
+            document.getElementById("screen-study").classList.add("active");
+            loadCard();
+        }
+
+        function startPracticeMode() {
+            isPracticeMode = true;
+            document.getElementById("study-title").innerText = `⚡ Multi-Batch Practice`;
+            
+            currentActiveQueue = [];
+            for (let bId in completedBatches) {
+                if (completedBatches[bId]) {
+                    currentActiveQueue.push(...allWordsData[bId]);
+                }
+            }
+
+            if (currentActiveQueue.length === 0) {
+                alert("You haven't completed any batches yet! Finish at least one batch to unlock Practice Mode.");
+                return;
+            }
+
+            currentActiveQueue.sort(() => Math.random() - 0.5);
+
+            document.getElementById("screen-menu").classList.remove("active");
+            document.getElementById("screen-study").classList.add("active");
+            loadCard();
+        }
+
+        let currentWord = null;
+
+        function loadCard() {
+            if (currentActiveQueue.length === 0) {
+                if (!isPracticeMode) {
+                    completedBatches[activeBatchIndex] = true;
+                    saveAppData();
+                }
+                document.getElementById("word-display").innerText = "🎉";
+                document.getElementById("card-back").style.display = "block";
+                document.getElementById("phonetic-display").innerText = "Batch Complete!";
+                document.getElementById("translation-display").innerText = "Great job working through this set.";
+                document.getElementById("info-display").innerText = "Returning to menu...";
+                document.getElementById("btn-show").style.display = "none";
+                document.getElementById("btn-fail").style.display = "none";
+                document.getElementById("btn-pass").style.display = "none";
+                
+                setTimeout(returnToMenu, 2500);
+                return;
+            }
+
+            currentWord = currentActiveQueue[0];
+            let prog = userProgress[currentWord.id] || { state: 1, correctInState: 0 };
+
+            document.getElementById("word-display").innerText = currentWord.cyrillic;
+            document.getElementById("phonetic-display").innerText = currentWord.phonetic;
+            document.getElementById("translation-display").innerText = currentWord.translation;
+            document.getElementById("info-display").innerText = currentWord.info;
+            
+            document.getElementById("stat-queue").innerText = `Queue: ${currentActiveQueue.length}`;
+            document.getElementById("stat-state").innerText = `State: ${prog.state}`;
+            document.getElementById("stat-progress").innerText = isPracticeMode ? `Mode: Practice` : `Progress: ${10 - currentActiveQueue.length + 1}/10`;
+
+            document.getElementById("card-back").style.display = "none";
+            document.getElementById("btn-show").style.display = "block";
+            document.getElementById("btn-fail").style.display = "none";
+            document.getElementById("btn-pass").style.display = "none";
+        }
+
+        function showAnswer() {
+            document.getElementById("card-back").style.display = "block";
+            document.getElementById("btn-show").style.display = "none";
+            document.getElementById("btn-fail").style.display = "block";
+            document.getElementById("btn-pass").style.display = "block";
+        }
+
+        function handleResponse(passed) {
+            let prog = userProgress[currentWord.id];
+            let item = currentActiveQueue.shift();
+
+            if (passed) {
+                prog.correctInState++;
+                let required = stateThresholds[prog.state] || 1000;
+                
+                if (prog.correctInState >= required && prog.state < 10) {
+                    prog.state++;
+                    prog.correctInState = 0;
+                }
+
+                let pushBackIndex = Math.min(prog.state * 2, currentActiveQueue.length);
+                currentActiveQueue.splice(pushBackIndex, 0, item);
+
+            } else {
+                let penalty = prog.state;
+                prog.correctInState = Math.max(0, prog.correctInState - penalty);
+                
+                if (prog.correctInState === 0 && prog.state > 1) {
+                    prog.state--;
+                }
+
+                let retestPos = Math.min(2, currentActiveQueue.length);
+                currentActiveQueue.splice(retestPos, 0, item);
+            }
+
+            saveAppData();
+            loadCard();
+        }
+
+        function speakCurrentWord() {
+            if (!currentWord) return;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentWord.cyrillic);
+                utterance.lang = 'ru-RU';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        initMenu();
+    </script>
+</body>
+</html>
